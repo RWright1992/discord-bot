@@ -7,6 +7,7 @@ import os
 client = discord.Client()
 me = os.getenv('BOT_USER')
 commands = "- `bennybot.insult(name)`"
+players = {}
 
 @client.event
 async def on_ready():
@@ -96,6 +97,17 @@ async def on_message(message):
 
         elif "bennybot.logout()" == message.content.lower():
             await client.close()
+
+        elif message.content.lower().startswith("bennybot.play("):
+            link = message.content.replace("bennybot.play(", "")
+            link = link.replace(")", "")
+            channel = message.author.voice.voice_channel
+            server = message.server
+            await client.join_voice_channel(channel)
+            voice_client = client.voice_client_in(server)
+            player = await voice_client.create_ytdl_player(link)
+            players[server.id] = player
+            player.start()   
 
         elif message.content.lower() == "bennybot.commands()":
             async with message.channel.typing():
