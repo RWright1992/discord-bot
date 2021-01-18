@@ -3,3 +3,5 @@ venv
 messages.txt
 */__pycache__
 *.webm
+README.md
+.gitignore
