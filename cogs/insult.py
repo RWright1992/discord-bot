@@ -9,7 +9,7 @@ class Insult(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command()
+    @commands.command(brief="Insults the specified person")
     async def insult(self, ctx, *, person):
         insult = requests.get("https://insult.mattbas.org/api/insult")
         insult = insult.text.replace("Y", "y")

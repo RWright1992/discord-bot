@@ -11,7 +11,11 @@ class Youtube(commands.Cog):
         self.client = client
         self.players = {}
 
-    @commands.command()
+    # A check to see if the user is a has the music role.
+    async def has_music(ctx):
+        return ctx.guild.get_role(int(os.getenv('MUSIC_ROLE'))) in ctx.author.roles
+
+    @commands.command(brief="Bot will join voice for 10 mins and play link")
     async def play(self, ctx, url, length=600):
         channel = ctx.message.author.voice.channel
         await channel.connect()
@@ -29,17 +33,17 @@ class Youtube(commands.Cog):
 
         await voice_channel.disconnect()
 
-    @commands.command()
+    @commands.command(brief="Stop music playing and remove bot from voice")
     async def stop(self, ctx):
         voice_channel = ctx.message.guild.voice_client
         voice_channel.stop()
         await voice_channel.disconnect()
 
-    @commands.command()
+    @commands.command(brief="Pause music playing")
     async def pause(self, ctx):
         ctx.message.guild.voice_client.pause()
 
-    @commands.command()
+    @commands.command(brief="Resume paused music")
     async def resume(self, ctx):
         ctx.message.guild.voice_client.resume()
         
