@@ -11,7 +11,7 @@ class Youtube(commands.Cog):
         self.client = client
         self.players = {}
 
-    # A check to see if the user is a has the music role.
+    # A check to see if the user is a has the music role. Not currently in use.
     async def has_music(ctx):
         return ctx.guild.get_role(int(os.getenv('MUSIC_ROLE'))) in ctx.author.roles
 
