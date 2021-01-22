@@ -16,7 +16,7 @@ class Admin(commands.Cog):
 
     # A check to see if the user is an Admin
     async def is_admin(ctx):
-        return ctx.guild.get_role(int(os.getenv('BENNY'))) or ctx.guild.get_role(int(os.getenv('MATT'))) in ctx.author.roles
+        return (ctx.guild.get_role(int(os.getenv('BENNY'))) in ctx.author.roles) or (ctx.guild.get_role(int(os.getenv('MATT'))) in ctx.author.roles)
 
     # Add to Cannon Fodder on join.
     @commands.Cog.listener()
