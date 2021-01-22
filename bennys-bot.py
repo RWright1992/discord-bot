@@ -10,13 +10,13 @@ async def on_ready():
         pass
     print(f"We have logged in as {client.user}")
 
-@client.command()
-async def load(ctx, extension):
-    client.load_extension(f'cogs.{extension}')
+@client.command(brief="Load cog", hidden=True)
+async def load(ctx, cog):
+    client.load_extension(f'cogs.{cog}')
 
-@client.command()
-async def unload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
+@client.command(brief="Unload cog", hidden=True)
+async def unload(ctx, cog):
+    client.unload_extension(f'cogs.{cog}')
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):

@@ -12,7 +12,11 @@ class Admin(commands.Cog):
 
     # A check to see if the user is a TMT member
     async def is_tmt(ctx):
-        return int(os.getenv('TMT_MEMBER')) in ctx.author.roles
+        return ctx.guild.get_role(int(os.getenv('TMT_MEMBER'))) in ctx.author.roles
+
+    # A check to see if the user is an Admin
+    async def is_admin(ctx):
+        return (ctx.guild.get_role(int(os.getenv('BENNY'))) in ctx.author.roles) or (ctx.guild.get_role(int(os.getenv('MATT'))) in ctx.author.roles)
 
     # Add to Cannon Fodder on join.
     @commands.Cog.listener()
@@ -35,17 +39,17 @@ class Admin(commands.Cog):
             await message.channel.send(f"{person}, please be considerate of other users' notifications when using this tag.")
 
     # Set the environment variable 'HATED_USER' to ignore have all their messages deleted.
-    @commands.command()
+    @commands.command(brief="Sets value of key to value")
     @commands.check(is_tmt)
-    async def set_hated_user(self, ctx, user):
-        os.environ["HATED_USER"] = user
+    async def set(self, ctx, value: str="User#0000", key: str="HATED_USER"):
+        os.environ[key] = value
         await ctx.message.delete()
 
     # Unset the environment variable 'HATED_USER'
-    @commands.command()
+    @commands.command(brief="Unsets value of key")
     @commands.check(is_tmt)
-    async def unset_hated_user(self, ctx):
-        os.environ["HATED_USER"] = ""
+    async def unset(self, ctx, key: str="HATED_USER"):
+        os.environ[key] = ""
         await ctx.message.delete()
 
     # Remove any messages from the hated user and store in messages.txt
@@ -53,7 +57,7 @@ class Admin(commands.Cog):
     async def on_message(self, message):
         if str(message.author) == os.getenv("HATED_USER"):
             time.sleep(1)
-            with open("messages.txt", "a") as file:
+            with open("../messages.txt", "a") as file:
                 text = f"Message: {message.content}. Time(UTC): {message.created_at} \r\n"
                 file.write(text)
             await message.delete()
@@ -62,7 +66,7 @@ class Admin(commands.Cog):
             await message.channel.send(f"simp")
 
     # Retrieve hated user's messages
-    @commands.command()
+    @commands.command(brief="Retrieve recent deleted messages from hated user")
     @commands.check(is_tmt)
     async def get_messages(self, ctx):
         with open("../messages.txt", "r") as file:
@@ -71,11 +75,10 @@ class Admin(commands.Cog):
             await asyncio.sleep(3)
         await ctx.message.channel.send("\r\n".join(text))
 
-    @commands.command()
-    @commands.check(is_tmt)
+    @commands.command(brief="Logs the bot out - use if broken")
+    @commands.check(is_admin)
     async def logout(self, ctx):
         await self.client.close()
 
-    
 def setup(client):
     client.add_cog(Admin(client))
