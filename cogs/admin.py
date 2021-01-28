@@ -57,7 +57,7 @@ class Admin(commands.Cog):
     async def on_message(self, message):
         if str(message.author) == os.getenv("HATED_USER"):
             time.sleep(1)
-            with open("../messages.txt", "a") as file:
+            with open("./messages.txt", "a") as file:
                 text = f"Message: {message.content}. Time(UTC): {message.created_at} \r\n"
                 file.write(text)
             await message.delete()
@@ -69,7 +69,7 @@ class Admin(commands.Cog):
     @commands.command(brief="Retrieve recent deleted messages from hated user")
     @commands.check(is_tmt)
     async def get_messages(self, ctx):
-        with open("../messages.txt", "r") as file:
+        with open("./messages.txt", "r") as file:
             text = file.readlines()
         async with ctx.message.channel.typing():
             await asyncio.sleep(3)
