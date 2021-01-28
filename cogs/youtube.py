@@ -2,6 +2,8 @@ import discord
 from discord import voice_client
 from discord.player import FFmpegAudio, FFmpegPCMAudio
 import youtube_dl
+import glob
+import os
 import asyncio
 from discord.ext import commands
 
@@ -15,8 +17,8 @@ class Youtube(commands.Cog):
     async def has_music(ctx):
         return ctx.guild.get_role(int(os.getenv('MUSIC_ROLE'))) in ctx.author.roles
 
-    @commands.command(brief="Bot will join voice for 10 mins and play link")
-    async def play(self, ctx, url, length=600):
+    @commands.command(brief="Bot will join voice and play specified song")
+    async def play(self, ctx, *, url):
         channel = ctx.message.author.voice.channel
         await channel.connect()
 
@@ -29,15 +31,24 @@ class Youtube(commands.Cog):
             voice_channel.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
         await ctx.send(f'Now playing: {player.title}')
 
-        await asyncio.sleep(length)
-
+        while voice_channel.is_playing():
+            await asyncio.sleep(1)
         await voice_channel.disconnect()
+
+        await asyncio.sleep(5)
+
+        delete()
+
 
     @commands.command(brief="Stop music playing and remove bot from voice")
     async def stop(self, ctx):
         voice_channel = ctx.message.guild.voice_client
         voice_channel.stop()
         await voice_channel.disconnect()
+
+        await asyncio.sleep(5)
+
+        delete()
 
     @commands.command(brief="Pause music playing")
     async def pause(self, ctx):
@@ -70,6 +81,13 @@ ffmpeg_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
+def delete():
+    webm = glob.glob('*.webm')
+    m4a = glob.glob('*.m4a') 
+    
+    files = [x for x in webm] + [x for x in m4a]
+    [os.remove(file) for file in files]
+
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
@@ -82,7 +100,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url):
         loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=True))
 
         if 'entries' in data:
             # take first item from a playlist
