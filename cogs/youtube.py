@@ -11,53 +11,84 @@ class Youtube(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.players = {}
+        self.queue = []
 
-    # A check to see if the user is a has the music role. Not currently in use.
-    async def has_music(ctx):
-        return ctx.guild.get_role(int(os.getenv('MUSIC_ROLE'))) in ctx.author.roles
+    # A check to see if the user is in a voice channel
+    async def in_voice(ctx):
+        return ctx.message.author.voice != None
 
-    @commands.command(brief="Bot will join voice and play specified song")
-    async def play(self, ctx, *, url):
-        channel = ctx.message.author.voice.channel
-        await channel.connect()
+    async def play_songs(self, ctx, voice_channel):
+        while self.queue != []:
+            async with ctx.typing():
+                player = self.queue[0]
+                voice_channel.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
+            await ctx.send(f'Now playing: {player.title}')
 
-        server = ctx.message.guild
-        voice_channel = server.voice_client
-        #song = FFmpegAudio(url)
+            self.queue.remove(self.queue[0])
 
-        async with ctx.typing():
-            player = await YTDLSource.from_url(url)
-            voice_channel.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
-        await ctx.send(f'Now playing: {player.title}')
+            while voice_channel.is_playing():
+                await asyncio.sleep(1)
+            
+            await asyncio.sleep(3)
 
-        while voice_channel.is_playing():
-            await asyncio.sleep(1)
         await voice_channel.disconnect()
+
+    @commands.command(brief="Bot will join voice and play specified song or queue song")
+    @commands.check(in_voice)
+    async def play(self, ctx, *, url):
+        song = await YTDLSource.from_url(url)
+        self.queue.append(song)
+
+        try:
+            channel = ctx.message.author.voice.channel
+            await channel.connect()
+
+            server = ctx.message.guild
+            voice_channel = server.voice_client
+            await self.play_songs(ctx, voice_channel)
+        except:
+            async with ctx.typing():
+                await asyncio.sleep(1)
+            await ctx.send(f'Added to queue: {song.title}')
 
         await asyncio.sleep(5)
 
         delete()
 
-
     @commands.command(brief="Stop music playing and remove bot from voice")
+    @commands.check(in_voice)
     async def stop(self, ctx):
         voice_channel = ctx.message.guild.voice_client
         voice_channel.stop()
         await voice_channel.disconnect()
 
         await asyncio.sleep(5)
-
+        self.queue = []
         delete()
 
     @commands.command(brief="Pause music playing")
+    @commands.check(in_voice)
     async def pause(self, ctx):
         ctx.message.guild.voice_client.pause()
 
     @commands.command(brief="Resume paused music")
+    @commands.check(in_voice)
     async def resume(self, ctx):
         ctx.message.guild.voice_client.resume()
-        
+
+    @commands.command(brief="Show play queue")
+    @commands.check(in_voice)
+    async def queue(self, ctx):
+        songs = [ song.title for song in self.queue ]
+        newline = "\r\n"
+        await ctx.send(f'Play queue is: {newline}{newline.join(songs)}')
+
+    @commands.command(brief="Skip the current song")
+    @commands.check(in_voice)
+    async def skip(self, ctx):
+        voice_channel = ctx.message.guild.voice_client
+        voice_channel.stop()
+        await self.play_songs(ctx, voice_channel)
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 

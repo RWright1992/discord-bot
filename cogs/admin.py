@@ -1,4 +1,3 @@
-from asyncio.base_events import _is_stream_socket
 import discord
 import os
 import time
